@@ -1,0 +1,182 @@
+#: kivy 1.0.9
+# Reference engine.py
+# import main generatorscreen
+
+<CustomTextInput@TextInput>
+    multiline: False
+    size_hint_x: .35
+    size_hint_max_y: .20
+
+<InputBox@BoxLayout>
+    orientation: "horizontal"
+    size_hint_y: .15
+
+<InputLabel@Label>
+    color: 1, 1, 1, 1
+    size_hint_max_y: .10
+
+<MapLabel>
+    canvas.before:
+        Color:
+            rgba: 1, 0, 1, 1
+        Rectangle:
+            pos: self.pos
+            size: self.size
+
+<DungeonMap>:
+    orientation: "vertical"
+    do_rotation: False
+    do_scale: False
+
+<InputArea>:
+    id: input_area
+    padding: 10
+    spacing: 10
+    orientation: "vertical"
+
+    map_height_input: map_height
+    map_width_input: map_width
+    num_rooms_input: num_rooms
+    min_room_size_input: min_room_size
+    max_room_size_input: max_room_size
+    room_margin_input: room_margin
+
+    BoxLayout:
+        id: map_settings
+        orientation: "vertical"
+
+        InputLabel:
+            text: "MAP"
+
+        InputBox:
+            Label:
+                text: "Map Height"
+            CustomTextInput:
+                id: map_height
+                text: "100"
+
+        InputBox:
+            Label:
+                text: "Map Width"
+            CustomTextInput:
+                id: map_width
+                text: "101"
+
+    BoxLayout:
+        id: top_spacer
+        size_hint_min_y: .3
+        size_hint_max_y: .5
+
+    BoxLayout:
+        id: room_settings
+        orientation: "vertical"
+
+        InputLabel:
+            text: "ROOMS"
+
+        InputBox:
+            Label:
+                text: "Number of rooms"
+            CustomTextInput:
+                id: num_rooms
+                text: "100"
+
+        InputBox:
+            Label:
+                text: "Minimum Room Size"
+            CustomTextInput:
+                id: min_room_size
+                text: "5"
+
+        InputBox:
+            Label:
+                text: "Maximum Room Size"
+            CustomTextInput:
+                id: max_room_size
+                text: "10"
+
+        InputBox:
+            Label:
+                text: "Room Margin"
+            CustomTextInput:
+                id: room_margin
+
+    BoxLayout:
+        id: middle_spacer
+        size_hint_max_y: .4
+
+    BoxLayout:
+        id: room_placer
+        orientation: "vertical"
+        padding: 20
+
+        InputLabel:
+            text: "Manual Placement"
+            font_size: 20
+            size: self.texture_size
+
+        InputBox:
+            Label:
+                id: room_x_label
+                text: "Room x"
+            CustomTextInput:
+                id: room_x
+                size: room_x_label.size
+
+            Label:
+                text: "Room y"
+            CustomTextInput:
+                id: room_y
+
+        InputBox:
+            Label:
+                text: "Room width"
+            CustomTextInput:
+                id: room_width
+
+        InputBox:
+            Label:
+                text: "Room height"
+            CustomTextInput:
+                id: room_height
+
+
+    BoxLayout:
+        id: bottom_spacer
+        size_hint_max_y: .3
+
+
+GeneratorScreen:
+
+<GeneratorScreen>:
+    id: g_screen
+    orientation: "vertical"
+    padding: 10
+    spacing: 10
+
+    BoxLayout:
+        orientation: "horizontal"
+
+        InputArea:
+            id: i_area
+            size_hint_x: 30
+
+        DungeonMap:
+            id: d_map
+            size_hint_x: 70
+
+            MapLabel:
+                id: map_label
+
+
+    BoxLayout:
+        id: map_buttons
+        size_hint_max_y: 40
+
+        Button:
+            text: "Generate New Map"
+            on_press: d_map.generate_map(i_area)
+
+        Button:
+            text: "Clear Map"
+            on_press: d_map.clear_dungeon()
