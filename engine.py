@@ -17,6 +17,7 @@ MAX_ROOM_SIZE = 11
 DATA_PATH = "data"
 TILE_SIZE = 6
 LEVEL_SIZE = 100
+ROOM_MARGIN = 1
 
 COLORS = {
     "WALL": (0.39, 0.8, 0.39, 1),
@@ -54,17 +55,24 @@ class DungeonMap(ScatterLayout):
 
     def __init__(self, **kwargs):
         super(DungeonMap, self).__init__(**kwargs)
-        self.generator = DungeonGenerator(LEVEL_SIZE, LEVEL_SIZE + 1)
-        self.map_width = self.map_width
-        self.map_height = self.map_height
+        self.map_settings = {
+            "map_height": LEVEL_SIZE,
+            "map_width": LEVEL_SIZE + 1,
+            "min_room_size": MIN_ROOM_SIZE,
+            "max_room_size": MAX_ROOM_SIZE,
+            "room_margin": ROOM_MARGIN
+        }
+        self.generator = DungeonGenerator(self.map_settings["map_height"], self.map_settings["map_width"])
+        self.map_width = self.map_settings["map_width"]
+        self.map_height = self.map_settings["map_height"]
 
     def build_dungeon(
         self, map_height, map_width, min_room_size, max_room_size, room_margin=1
     ):
-        dungeon = DungeonGenerator(map_height, map_width)
-        dungeon.place_random_rooms(min_room_size, max_room_size, margin=room_margin)
+        generator = DungeonGenerator(map_height, map_width)
+        generator.place_random_rooms(min_room_size, max_room_size, margin=room_margin)
 
-        self.generator = dungeon
+        self.generator = generator
         self.map_width = self.generator.width
         self.map_height = self.generator.height
 
@@ -80,14 +88,12 @@ class DungeonMap(ScatterLayout):
         self.generator.clear_map()
 
     def generate_map(self, buttons: InputArea = None):
-        for n in Neighbors.every():
-            print(n)
-        print(f"{buttons.map_height_input.text}")
+        # initialize map settings
         map_height = LEVEL_SIZE
         map_width = LEVEL_SIZE + 1
         min_room_size = MIN_ROOM_SIZE
         max_room_size = MAX_ROOM_SIZE
-        room_margin = 1
+        room_margin = ROOM_MARGIN
 
         # checks for int values in input boxes
         try:
