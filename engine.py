@@ -148,43 +148,8 @@ class TileButton(Button):
 class DungeonGeneratorApp(App):
 
     def build(self):
-        # button_bar = ButtonBar()
-        # dungeon_map = DungeonMap()
-        # self.button_bar = button_bar
-        # self.dungeon_map = DungeonMap()
-        # self.dungeon_map.build_dungeon(map_height=LEVEL_SIZE,
-        #                                map_width=LEVEL_SIZE + 1,
-        #                                min_room_size=MIN_ROOM_SIZE,
-        #                                max_room_size=MAX_ROOM_SIZE)
-
-        # for row, col, tile in self.dungeon_map.dungeon:
-        #     r, g, b, a = COLORS[tile.label]
-        #     with self.dungeon_map.map_label.canvas.before:
-        #         # draw background square to create grid illusion
-        #         Color(0, 0, 0, 1)
-        #         Rectangle(pos=(row*TILE_SIZE, col*TILE_SIZE), size=(TILE_SIZE, TILE_SIZE))
-        #         # draw tile on top
-        #         Color(r, g, b, a)
-        #         Rectangle(pos=(row*TILE_SIZE-1, col*TILE_SIZE-1), size=(TILE_SIZE-1, TILE_SIZE-1))
-
-        # self.dungeon_map.add_widget(self.dungeon_map.map_label)
-
-        # button = Button()
-        # button.text = "Generate New Map"
-        # button.bind(on_press=self.generate_map)
-        # self.dungeon_map.add_widget(button)
-        #
-        # button2 = Button()
-        # button2.text = "Clear Map"
-        # button2.bind(on_press=self.clear_map)
-        # self.dungeon_map.add_widget(button2)
-
-        # self.screen.add_widget(self.dungeon_map)
-        # self.screen.add_widget(self.button_bar)
-
-        # self.display_dungeon()
-        self.screen = GeneratorScreen()
-        return self.screen
+        screen = GeneratorScreen()
+        return screen
 
 
 """
