@@ -6,6 +6,7 @@ from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.button import Button
 from kivy.uix.label import Label
 from kivy.uix.scatterlayout import ScatterLayout
+from kivy.uix.scrollview import ScrollView
 
 from enums import Neighbors
 from generator import DungeonGenerator
@@ -48,8 +49,7 @@ class InputArea(BoxLayout):
     extra_door_input = ObjectProperty()
 
 
-class DungeonMap(ScatterLayout):
-    # map_label = MapLabel()
+class DungeonMap(ScrollView):
     map_width = NumericProperty(0)
     map_height = NumericProperty(0)
 
@@ -134,49 +134,18 @@ class DungeonMap(ScatterLayout):
 
 class TileButton(Button):
     tile_color = ObjectProperty([1, 1, 1, 1])
+    tile_region = None
+
+    @property
+    def region(self) -> int:
+        return self.tile_region
+
+    @region.setter
+    def region(self, value: int):
+        self.tile_region = value
 
 
 class DungeonGeneratorApp(App):
-
-    dungeon_map = DungeonMap()
-    input_area = InputArea()
-    screen = None
-
-    def display_dungeon(self, dungeon_map=None):
-        map_label = MapLabel()
-        with map_label.canvas.before:
-            Color(0, 0, 0, 1)
-            Rectangle(pos=(0, 0), size=self.parent.size)
-        for row, col, tile in self.dungeon_map.generator:
-            # r, g, b, a = COLORS[tile.label]
-            r, g, b, a = tile.label()
-            with map_label.canvas.after:
-                # draw background square to create grid illusion
-                # Color(0, 0, 0, 1)
-                # Rectangle(pos=(row*TILE_SIZE, col*TILE_SIZE), size=(TILE_SIZE, TILE_SIZE))
-                # draw tile on top
-                Color(r, g, b, a)
-                Rectangle(
-                    pos=(row * TILE_SIZE - 1, col * TILE_SIZE - 1),
-                    size=(TILE_SIZE - 1, TILE_SIZE - 1),
-                )
-
-        self.dungeon_map.map_label = map_label
-        self.dungeon_map.add_widget(map_label)
-
-    def clear_map(self, *args):
-        self.dungeon_map.clear_dungeon()
-
-    def generate_map(self, *args):
-        print(f"generate map {self.dungeon_map.height}")
-        self.clear_map()
-        self.dungeon_map.build_dungeon(
-            map_height=self.button_bar.map_height_input,
-            map_width=self.button_bar.map_width_input,
-            min_room_size=self.button_bar.min_room_size_input,
-            max_room_size=self.button_bar.max_room_size_input,
-        )
-        self.display_dungeon()
 
     def build(self):
         # button_bar = ButtonBar()
