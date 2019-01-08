@@ -3,7 +3,12 @@ from enum import Enum
 from point import Point
 
 
-class Neighbors(Enum):
+class CallableEnum(Enum):
+    def __call__(self):
+        return self.value
+
+
+class Direction(CallableEnum):
     NW = Point(-1, 1)
     N = Point(0, 1)
     NE = Point(1, 1)
@@ -28,18 +33,15 @@ class Neighbors(Enum):
         for direction in cls:
             yield direction.value
 
-    def __call__(self):
-        return self.value
 
-
-class TileType(Enum):
-    WALL = (.39, .8, .39, 1)
+class TileType(CallableEnum):
+    WALL = (1, 1, 1, 1)
     FLOOR = (.5, .5, .5, 1)
     DOOR = (1, .5, .5, 1)
-    EMPTY = (1, 1, 1, 1)
-
-    def __call__(self):
-        return self.value
+    EMPTY = (.39, .8, .39, 1)
+    BLUE = (0, 0, 1, 1)
+    RED = (1, 0, 0, 1)
+    YELLOW = (1, 1, 0, 1)
 
     def __str__(self):
         return str(self.name)
