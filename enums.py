@@ -36,9 +36,9 @@ class Direction(CallableEnum):
 
 class TileType(CallableEnum):
     WALL = (1, 1, 1, 1)
-    FLOOR = (.75, .75, .75, 1)
+    FLOOR = (.5, .5, .5, 1)
     DOOR = (1, .5, .5, 1)
-    CORRIDOR = (.5, .5, .5, 1)
+    CORRIDOR = (.7, .7, .7, 1)
     EMPTY = (.39, .8, .39, 1)
     BLUE = (0, 0, 1, 1)
     RED = (1, 0, 0, 1)
