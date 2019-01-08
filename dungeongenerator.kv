@@ -6,6 +6,7 @@
     multiline: False
     size_hint_x: .35
     size_hint_max_y: .20
+    write_tab: False
 
 <InputBox@BoxLayout>
     orientation: "horizontal"
@@ -15,135 +16,11 @@
     color: 1, 1, 1, 1
     size_hint_max_y: .10
 
-<MapLabel>
-    canvas.before:
-        Color:
-            rgba: 1, 0, 1, 1
-        Rectangle:
-            pos: self.pos
-            size: self.size
-
-<DungeonMap>:
-    orientation: "vertical"
-    do_rotation: False
-    do_scale: False
-
 <InputArea>:
     id: input_area
     padding: 10
     spacing: 10
     orientation: "vertical"
-
-    map_height_input: map_height
-    map_width_input: map_width
-    num_rooms_input: num_rooms
-    min_room_size_input: min_room_size
-    max_room_size_input: max_room_size
-    room_margin_input: room_margin
-
-    BoxLayout:
-        id: map_settings
-        orientation: "vertical"
-
-        InputLabel:
-            text: "MAP"
-
-        InputBox:
-            Label:
-                text: "Map Height"
-            CustomTextInput:
-                id: map_height
-                text: "100"
-
-        InputBox:
-            Label:
-                text: "Map Width"
-            CustomTextInput:
-                id: map_width
-                text: "101"
-
-    BoxLayout:
-        id: top_spacer
-        size_hint_min_y: .3
-        size_hint_max_y: .5
-
-    BoxLayout:
-        id: room_settings
-        orientation: "vertical"
-
-        InputLabel:
-            text: "ROOMS"
-
-        InputBox:
-            Label:
-                text: "Number of rooms"
-            CustomTextInput:
-                id: num_rooms
-                text: "100"
-
-        InputBox:
-            Label:
-                text: "Minimum Room Size"
-            CustomTextInput:
-                id: min_room_size
-                text: "5"
-
-        InputBox:
-            Label:
-                text: "Maximum Room Size"
-            CustomTextInput:
-                id: max_room_size
-                text: "10"
-
-        InputBox:
-            Label:
-                text: "Room Margin"
-            CustomTextInput:
-                id: room_margin
-
-    BoxLayout:
-        id: middle_spacer
-        size_hint_max_y: .4
-
-    BoxLayout:
-        id: room_placer
-        orientation: "vertical"
-        padding: 20
-
-        InputLabel:
-            text: "Manual Placement"
-            font_size: 20
-            size: self.texture_size
-
-        InputBox:
-            Label:
-                id: room_x_label
-                text: "Room x"
-            CustomTextInput:
-                id: room_x
-                size: room_x_label.size
-
-            Label:
-                text: "Room y"
-            CustomTextInput:
-                id: room_y
-
-        InputBox:
-            Label:
-                text: "Room width"
-            CustomTextInput:
-                id: room_width
-
-        InputBox:
-            Label:
-                text: "Room height"
-            CustomTextInput:
-                id: room_height
-
-
-    BoxLayout:
-        id: bottom_spacer
-        size_hint_max_y: .3
 
 
 GeneratorScreen:
@@ -159,14 +36,124 @@ GeneratorScreen:
 
         InputArea:
             id: i_area
-            size_hint_x: 30
+            size_hint_x: 60
+            size_hint_max_x: 200
 
-        DungeonMap:
-            id: d_map
-            size_hint_x: 70
+            map_height_input: map_height
+            map_width_input: map_width
+            num_rooms_input: num_rooms
+            min_room_size_input: min_room_size
+            max_room_size_input: max_room_size
+            room_margin_input: room_margin
 
-            MapLabel:
-                id: map_label
+            BoxLayout:
+                id: map_settings
+                orientation: "vertical"
+
+                InputLabel:
+                    text: "MAP"
+
+                InputBox:
+                    Label:
+                        text: "Map Height"
+                    CustomTextInput:
+                        id: map_height
+                        text: "100"
+                        on_text_validate: d_map.update_setting_from_input("map_height", int(self.text))
+
+                InputBox:
+                    Label:
+                        text: "Map Width"
+                    CustomTextInput:
+                        id: map_width
+                        text: "101"
+                        on_text_validate: d_map.update_setting_from_input("map_width", int(self.text))
+
+                InputBox:
+                    Label:
+                        text: "Tile Size"
+                    CustomTextInput:
+                        id: tile_size
+                        text: "6"
+                        on_text_validate: d_map.update_setting_from_input("tile_size", int(self.text))
+
+            BoxLayout:
+                id: top_spacer
+                size_hint_min_y: .3
+                size_hint_max_y: .5
+
+            BoxLayout:
+                id: room_settings
+                orientation: "vertical"
+
+                InputLabel:
+                    text: "ROOMS"
+
+                InputBox:
+                    Label:
+                        text: "Number of rooms"
+                    CustomTextInput:
+                        id: num_rooms
+                        text: "100"
+                        on_text_validate: d_map.update_setting_from_input("num_rooms", int(self.text))
+
+                InputBox:
+                    Label:
+                        text: "Minimum Room Size"
+                    CustomTextInput:
+                        id: min_room_size
+                        text: "5"
+                        on_text_validate: d_map.update_setting_from_input("min_room_size", int(self.text))
+
+                InputBox:
+                    Label:
+                        text: "Maximum Room Size"
+                    CustomTextInput:
+                        id: max_room_size
+                        text: "10"
+                        on_text_validate: d_map.update_setting_from_input("max_room_size", int(self.text))
+
+                InputBox:
+                    Label:
+                        text: "Room Margin"
+                    CustomTextInput:
+                        id: room_margin
+                        text: "1"
+                        on_text_validate: d_map.update_setting_from_input("room_margin", int(self.text))
+
+            BoxLayout:
+                id: middle_spacer
+                size_hint_max_y: .4
+                size_hint_min_y: .15
+
+            BoxLayout:
+                id: bottom_spacer
+                size_hint_max_y: .3
+                size_hint_min_y: .15
+
+            Button:
+                text: "Update Settings"
+                on_press: d_map.update_all_settings(int(map_height.text), int(map_width.text), int(tile_size.text), int(num_rooms.text), int(min_room_size.text), int(max_room_size.text), int(room_margin.text))
+
+            Button:
+                text: "Test Dungeon"
+                on_press: d_map.test_dungeon()
+
+        BoxLayout:
+
+            DungeonMap:
+                id: d_map
+                padding: 0
+                spacing: 0
+                size_hint_x: None
+                width: root.width * .7
+
+                MapLabel:
+                    id: map_label
+                    size_hint_x: None
+                    size_hint_y: None
+                    width: d_map.map_width * d_map.tile_size
+                    height: d_map.map_height * d_map.tile_size
 
 
     BoxLayout:
@@ -175,7 +162,7 @@ GeneratorScreen:
 
         Button:
             text: "Generate New Map"
-            on_press: d_map.generate_map(i_area)
+            on_press: d_map.generate_map()
 
         Button:
             text: "Clear Map"

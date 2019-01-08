@@ -23,7 +23,7 @@ class Tile:
         self.passable = passable
 
     def __str__(self):
-        return f"{self.position} = {self.label}, {self.passable}"
+        return f"Tile{self.position} = {self.label}, {self.passable}"
 
     def __repr__(self):
         return f"({self.__class__.__name__}) x={self.x}, y={self.y}, label={self.label}, passable={self.passable}"
@@ -37,22 +37,33 @@ class Tile:
         return self.position.y
 
     @staticmethod
-    def from_label(pos: Point, label: TileType):
+    def from_label(point: Point, label: TileType):
+        """
+        creates a Tile from the label provided
+        :param point: x- and y-coordinates for the tile
+        :type point: Point
+        :param label: label for the type of tile to be created
+        :type label: TileType
+        :return: returns a tile at x and y of point with the label provided
+        :rtype: Tile
+        """
         if label == TileType.EMPTY:
-            return Tile.empty(pos)
+            return Tile.empty(point)
         elif label == TileType.FLOOR:
-            return Tile.floor(pos)
+            return Tile.floor(point)
         elif label == TileType.WALL:
-            return Tile.wall(pos)
+            return Tile.wall(point)
         elif label == TileType.DOOR:
-            return Tile.door(pos)
+            return Tile.door(point)
 
     @classmethod
     def empty(cls, point=Point(-1, -1)):
         """
         creates an empty Tile that is not passable
-        :param point: x- and y-coordinates for the tile
-        :return: returns a Tile(x, y) with the label "EMPTY" and not passable
+        :param point: x- and y-coordinates for the tile, defaults to -1, -1 if no point is provided
+        :type point: Point
+        :return: returns a tile at x and y of point with the label "EMPTY" and not passable
+        :rtype Tile
         """
         return Tile(point.x, point.y, label=TileType.EMPTY, passable=False)
 
@@ -61,7 +72,9 @@ class Tile:
         """
         creates a floor Tile that is passable
         :param point: x- and y-coordinates for the tile
-        :return: returns a Tile(point.x, point.y) with the label "FLOOR" and passable
+        :type point: Point
+        :return: returns a tile at x and y of point with the label "FLOOR" and passable
+        :rtype: Tile
         """
         return Tile(point.x, point.y, label=TileType.FLOOR, passable=True)
 
@@ -70,7 +83,9 @@ class Tile:
         """
         creates a wall Tile that is not passable
         :param point: x- and y-coordinates for the tile
-        :return: returns a Tile(x, y) with the label "WALL" and not passable
+        :type point: Point
+        :return: returns a tile at x and y of point with the label "WALL" and not passable
+        :rtype: Tile
         """
         return Tile(point.x, point.y, label=TileType.WALL, passable=False)
 
@@ -79,6 +94,8 @@ class Tile:
         """
         creates a door Tile that is not passable
         :param point: x- and y-coordinates for the tile
-        :return: returns a Tile(x, y) with the label "DOOR" and not passable
+        :type point: Point
+        :return: returns a tile at x and y of point with the label "DOOR" and not passable
+        :rtype Tile
         """
         return Tile(point.x, point.y, label=TileType.DOOR, passable=False)

@@ -8,7 +8,7 @@ from kivy.uix.label import Label
 from kivy.uix.scatterlayout import ScatterLayout
 from kivy.uix.scrollview import ScrollView
 
-from enums import Neighbors
+from enums import Direction, TileType
 from generator import DungeonGenerator
 
 SCREEN_WIDTH = 1280
@@ -19,18 +19,21 @@ DATA_PATH = "data"
 TILE_SIZE = 6
 LEVEL_SIZE = 100
 ROOM_MARGIN = 1
+NUM_ROOMS = 100
 
 COLORS = {
     "WALL": (0.39, 0.8, 0.39, 1),
     "FLOOR": (0.5, 0.5, 0.5, 1),
     "DOOR": (1, 0.5, 0.5, 1),
     "EMPTY": (1, 1, 1, 1),
+    "BLUE": (0, 0, 1, 1),
+    "RED": (1, 0, 0, 1),
+    "YELLOW": (1, 1, 0, 1)
 }
 
 
 class GeneratorScreen(BoxLayout):
-    def draw_dungeon(self, dungeon):
-        pass
+    pass
 
 
 class MapLabel(Label):
@@ -50,8 +53,8 @@ class InputArea(BoxLayout):
 
 
 class DungeonMap(ScrollView):
-    map_width = NumericProperty(0)
-    map_height = NumericProperty(0)
+    # map_width = NumericProperty(0)
+    # map_height = NumericProperty(0)
 
     def __init__(self, **kwargs):
         super(DungeonMap, self).__init__(**kwargs)
@@ -60,136 +63,176 @@ class DungeonMap(ScrollView):
             "map_width": LEVEL_SIZE + 1,
             "min_room_size": MIN_ROOM_SIZE,
             "max_room_size": MAX_ROOM_SIZE,
-            "room_margin": ROOM_MARGIN
+            "room_margin": ROOM_MARGIN,
+            "num_rooms": NUM_ROOMS,
+            "tile_size": TILE_SIZE,
         }
-        self.generator = DungeonGenerator(self.map_settings["map_height"], self.map_settings["map_width"])
-        self.map_width = self.map_settings["map_width"]
-        self.map_height = self.map_settings["map_height"]
+        self.generator = DungeonGenerator(self.map_settings)
 
-    def build_dungeon(
-        self, map_height, map_width, min_room_size, max_room_size, room_margin=1
-    ):
-        generator = DungeonGenerator(map_height, map_width)
-        generator.place_random_rooms(min_room_size, max_room_size, margin=room_margin)
+    @property
+    def min_room_size(self):
+        return self.map_settings["min_room_size"]
 
-        self.generator = generator
-        self.map_width = self.generator.width
-        self.map_height = self.generator.height
+    @min_room_size.setter
+    def min_room_size(self, value):
+        self.map_settings["min_room_size"] = value
 
-    def clear_dungeon(self):
-        print("clear dungeon")
-        # print(f"{self.children}")
-        child = self.children[0]
-        child.canvas.before.clear()
-        child.canvas.clear()
-        child.canvas.after.clear()
-        # child.canvas.ask_update()
+    @property
+    def max_rooms_size(self):
+        return self.map_settings["max_room_size"]
+
+    @max_rooms_size.setter
+    def max_rooms_size(self, value):
+        self.map_settings["max_room_size"] = value
+
+    @property
+    def num_rooms(self):
+        return self.map_settings["num_rooms"]
+
+    @num_rooms.setter
+    def num_rooms(self, value):
+        self.map_settings["num_rooms"] = value
+
+    @property
+    def tile_size(self):
+        return self.map_settings["tile_size"]
+
+    @tile_size.setter
+    def tile_size(self, value):
+        self.map_settings["tile_size"] = value
+
+    @property
+    def map_width(self):
+        return self.map_settings["map_width"]
+
+    @map_width.setter
+    def map_width(self, value):
+        self.map_settings["map_width"] = value
+
+    @property
+    def map_height(self):
+        return self.map_settings["map_height"]
+
+    @map_height.setter
+    def map_height(self, value):
+        self.map_settings["map_height"] = value
+
+    def create_dungeon(self):
+        """
+        sets all tiles in dungeon to wall tiles
+        places random rooms with current map settings
+        """
+        self.generator.initialize_map()
+        self.generator.place_random_rooms(
+            min_room_size=self.map_settings["min_room_size"],
+            max_room_size=self.map_settings["max_room_size"],
+            margin=self.map_settings["room_margin"],
+        )
+
+    def build_dungeon(self):
+        """
+        sets generator to new instance of Dungeon Generator with current map setting
+        Then creates a dungeon with current map settings
+        """
+        self.generator = DungeonGenerator(self.map_settings)
+        self.create_dungeon()
+
+    def clear_dungeon_map(self):
+        """
+        clears canvas of Map Label and calls clear_map in self.generator
+        """
+        map_label = self.children[0]
+        map_label.canvas.before.clear()
+        map_label.canvas.clear()
+        map_label.canvas.after.clear()
 
         self.generator.clear_map()
 
-    def generate_map(self, buttons: InputArea = None):
-        # initialize map settings
-        map_height = LEVEL_SIZE
-        map_width = LEVEL_SIZE + 1
-        min_room_size = MIN_ROOM_SIZE
-        max_room_size = MAX_ROOM_SIZE
-        room_margin = ROOM_MARGIN
-
-        # checks for int values in input boxes
-        try:
-            map_height = int(buttons.map_height_input.text)
-            map_width = int(buttons.map_width_input.text)
-            min_room_size = int(buttons.min_room_size_input.text)
-            max_room_size = int(buttons.max_room_size_input.text)
-            room_margin = int(buttons.room_margin_input.text)
-        except ValueError:
-            pass
-
-        self.clear_dungeon()
-        self.build_dungeon(
-            map_height=map_height,
-            map_width=map_width,
-            min_room_size=min_room_size,
-            max_room_size=max_room_size,
-            room_margin=room_margin,
-        )
+    def generate_map(self):
+        """
+        clears dungeon map, then builds new dungeon with current map settings and displays map
+        """
+        self.clear_dungeon_map()
+        self.build_dungeon()
         self.display_dungeon()
 
+    def update_setting_from_input(self, setting: str, value: int):
+        if setting not in self.map_settings.keys() or value < 0:
+            print(f"User pressed enter in {setting} with value of {value}")
+        else:
+            self.map_settings[setting] = value
+
+    def update_all_settings(
+        self,
+        map_height,
+        map_width,
+        tile_size,
+        num_rooms,
+        min_room_size,
+        max_room_size,
+        room_margin,
+    ):
+        self.map_settings["map_height"] = map_height
+        self.map_settings["map_width"] = map_width
+        self.map_settings["tile_size"] = tile_size
+        self.map_settings["num_rooms"] = num_rooms
+        self.map_settings["min_room_size"] = min_room_size
+        self.map_settings["max_room_size"] = max_room_size
+        self.map_settings["room_margin"] = room_margin
+
     def display_dungeon(self):
+        """
+        iterates through every tile in the map and draws a rectangle with color based on tile label
+        """
         map_label = self.children[0]
-        for row, col, tile in self.generator:
-            # r, g, b, a = COLORS[tile.label]
-            r, g, b, a = tile.label()
-            with map_label.canvas:
-                # draw background square to create grid illusion
-                # Color(0, 0, 0, 1)
-                # Rectangle(pos=(row*TILE_SIZE, col*TILE_SIZE), size=(TILE_SIZE, TILE_SIZE))
-                # draw tile on top
-                Color(r, g, b, a)
-                Rectangle(
-                    pos=(row * TILE_SIZE - 1, col * TILE_SIZE - 1),
-                    size=(TILE_SIZE - 1, TILE_SIZE - 1),
-                )
+        for row in range(self.map_height):
+            for col in range(self.map_width):
+                tile = self.generator.tile(col, self.map_height - row - 1)
 
+                r, g, b, a = tile.label()
+                with map_label.canvas:
+                    Color(r, g, b, a)
+                    Rectangle(
+                        pos=(col * TILE_SIZE - 1, row * TILE_SIZE - 1),
+                        size=(TILE_SIZE - 1, TILE_SIZE - 1),
+                    )
 
-class TileButton(Button):
-    tile_color = ObjectProperty([1, 1, 1, 1])
-    tile_region = None
+        map_label
 
-    @property
-    def region(self) -> int:
-        return self.tile_region
+        with map_label.canvas.after:
+            Color(1, 0, 1, 1)
+            Rectangle(
+                pos=(TILE_SIZE - 1, TILE_SIZE - 1), size=(TILE_SIZE - 1, TILE_SIZE - 1)
+            )
 
-    @region.setter
-    def region(self, value: int):
-        self.tile_region = value
+    def test_dungeon(self):
+        self.clear_dungeon_map()
+        map_settings = {
+            "map_height": 45,
+            "map_width": 60,
+            "min_room_size": 3,
+            "max_room_size": 5,
+            "room_margin": 1,
+            "num_rooms": 10,
+            "tile_size": TILE_SIZE,
+        }
+        self.generator = DungeonGenerator(map_settings)
+        self.generator.initialize_map()
+        self.generator.place_room(2, 2, 3, 5, 1)
+        self.generator.place_room(45, 40, 9, 4, 1, True)
+        self.map_settings = map_settings
+
+        self.generator.tile(1, 1).label = TileType.BLUE
+        self.generator.tile(2, 2).label = TileType.RED
+
+        self.display_dungeon()
 
 
 class DungeonGeneratorApp(App):
-
     def build(self):
         screen = GeneratorScreen()
         return screen
 
-
-"""
-def main():
-    screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
-    pygame.display.set_caption("Dungeon Generator")
-
-    '''
-    d = dungeonGenerator.dungeonGenerator(levelSize, levelSize)
-    d.placeRandomRooms(5, 11, 2, 4, 500)
-    d.generateCorridors()
-    d.connectAllRooms(30)
-    d.pruneDeadends(20)
-    d.placeWalls()
-    '''
-
-    d = DungeonGenerator(LEVEL_SIZE, LEVEL_SIZE + 1)
-    d.place_random_rooms(3, 7)
-
-    dungeon_surface = draw_dungeon1(d)
-    dungeon_surface.convert(dungeon_surface)
-    screen.blit(dungeon_surface, (10, 10))
-    pygame.display.flip()
-
-    while True:
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT or (
-                event.type == pygame.KEYDOWN and event.key == pygame.K_q
-            ):
-                pygame.quit()
-            elif event.type == pygame.KEYDOWN and event.key == pygame.K_r:
-                d.clear_map()
-                d.place_random_rooms(5, 11, 2, 1, 500)
-
-        dungeon_surface = draw_dungeon1(d)
-        dungeon_surface.convert(dungeon_surface)
-
-        screen.blit(dungeon_surface, (10, 10))
-        pygame.display.flip()
-"""
 
 if __name__ == "__main__":
     # pygame.init()
