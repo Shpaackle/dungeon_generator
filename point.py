@@ -30,6 +30,9 @@ class Point:
     def __hash__(self):
         return self.x ^ self.y
 
+    def __mul__(self, other: int):
+        return Point(self.x * other, self.y * other)
+
     def __str__(self):
         return f"({self.x}, {self.y})"
 

@@ -1,3 +1,5 @@
+import time
+
 from kivy.app import App
 from kivy.graphics.context_instructions import Color
 from kivy.graphics.vertex_instructions import Rectangle
@@ -10,6 +12,7 @@ from kivy.uix.scrollview import ScrollView
 
 from enums import Direction, TileType
 from generator import DungeonGenerator
+from point import Point
 
 SCREEN_WIDTH = 1280
 SCREEN_HEIGHT = 720
@@ -193,39 +196,61 @@ class DungeonMap(ScrollView):
                 with map_label.canvas:
                     Color(r, g, b, a)
                     Rectangle(
-                        pos=(col * TILE_SIZE - 1, row * TILE_SIZE - 1),
-                        size=(TILE_SIZE - 1, TILE_SIZE - 1),
+                        pos=(col * self.tile_size - 1, row * self.tile_size - 1),
+                        size=(self.tile_size - 1, self.tile_size - 1),
                     )
 
-        map_label
-
-        with map_label.canvas.after:
-            Color(1, 0, 1, 1)
-            Rectangle(
-                pos=(TILE_SIZE - 1, TILE_SIZE - 1), size=(TILE_SIZE - 1, TILE_SIZE - 1)
-            )
+        map_label.width = self.tile_size * self.map_width
+        map_label.height = self.tile_size * self.map_height
 
     def test_dungeon(self):
         self.clear_dungeon_map()
         map_settings = {
-            "map_height": 45,
-            "map_width": 60,
+            "map_height": 25,
+            "map_width": 30,
             "min_room_size": 3,
             "max_room_size": 5,
             "room_margin": 1,
             "num_rooms": 10,
-            "tile_size": TILE_SIZE,
+            "tile_size": 10,
         }
         self.generator = DungeonGenerator(map_settings)
         self.generator.initialize_map()
         self.generator.place_room(2, 2, 3, 5, 1)
         self.generator.place_room(45, 40, 9, 4, 1, True)
-        self.map_settings = map_settings
 
-        self.generator.tile(1, 1).label = TileType.BLUE
-        self.generator.tile(2, 2).label = TileType.RED
+        self.map_settings = map_settings
+        self.display_dungeon()
+        time.sleep(1)
+        # for y in range(1, self.generator.height, 2):
+        #     for x in range(1, self.generator.width, 2):
+        #         tile = self.generator.tile(x, y)
+        #         if tile.label is not TileType.WALL:
+        #             continue
+        #         self.generator.grow_maze(Point(x, y))
 
         self.display_dungeon()
+
+    def build_corridors(self):
+        for y in range(1, self.generator.height, 2):
+            for x in range(1, self.generator.width, 2):
+                tile = self.generator.tile(x, y)
+                if tile.label is not TileType.WALL:
+                    r, g, b, a = tile.label()
+                    with self.children[0].canvas:
+                        Color(r, g, b, a)
+                        Rectangle(
+                            pos=(tile.x * self.tile_size - 1, tile.y * self.tile_size - 1),
+                            size=(self.tile_size - 1, self.tile_size - 1),
+                        )
+                    # self.children[0].canvas.ask_update()
+                    # time.sleep(1)
+                    continue
+                self.generator.grow_maze(Point(x, y))
+
+
+        self.display_dungeon()
+
 
 
 class DungeonGeneratorApp(App):

@@ -47,14 +47,18 @@ class Tile:
         :return: returns a tile at x and y of point with the label provided
         :rtype: Tile
         """
-        if label == TileType.EMPTY:
+        if label is TileType.EMPTY:
             return Tile.empty(point)
-        elif label == TileType.FLOOR:
+        elif label is TileType.FLOOR:
             return Tile.floor(point)
-        elif label == TileType.WALL:
+        elif label is TileType.WALL:
             return Tile.wall(point)
-        elif label == TileType.DOOR:
+        elif label is TileType.DOOR:
             return Tile.door(point)
+        elif label is TileType.CORRIDOR:
+            return Tile.corridor(point)
+
+        return Tile.error(point)
 
     @classmethod
     def empty(cls, point=Point(-1, -1)):
@@ -79,6 +83,17 @@ class Tile:
         return Tile(point.x, point.y, label=TileType.FLOOR, passable=True)
 
     @classmethod
+    def corridor(cls, point):
+        """
+        creates a corridor Tile that is passable
+        :param point: x- and y-coordinates for the tile
+        :type point: Point
+        :return: returns a tile at x and y of point with the label "CORRIDOR" and passable
+        :rtype: Tile
+        """
+        return Tile(point.x, point.y, label=TileType.CORRIDOR, passable=True)
+
+    @classmethod
     def wall(cls, point):
         """
         creates a wall Tile that is not passable
@@ -99,3 +114,7 @@ class Tile:
         :rtype Tile
         """
         return Tile(point.x, point.y, label=TileType.DOOR, passable=False)
+
+    @classmethod
+    def error(cls, point):
+        return Tile(point.x, point.y, label=TileType.RED)
