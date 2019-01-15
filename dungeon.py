@@ -36,6 +36,8 @@ class Dungeon:
         self.region_grid = numpy.full(shape=self.grid_shape, fill_value=-1, dtype=int)
 
     def tile(self, point: Point) -> Tile:
+        if not self.in_bounds(point):
+            return Tile.empty(point)
         return self.tile_grid[point.y, point.x]
 
     def set_tile(self, point: Point, label: TileType):

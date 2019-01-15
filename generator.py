@@ -306,24 +306,19 @@ class DungeonGenerator:
         self.dungeon.clear_dungeon()
 
     def can_carve(self, pos: Point, direction: Point) -> bool:
-        directions = set()
 
         if pos is None:
             logger.error("pos in can_carve() sent as None")
             return False
 
-        if direction.x == 0:
-            directions.add([])
+        xs = (1, 0, -1) if direction.x == 0 else (1 * direction.x, 2 * direction.x)
+        ys = (1, 0, -1) if direction.y == 0 else (1 * direction.y, 2 * direction.y)
 
-        logger.debug(f"directions={directions}")
-
-        for point in directions:
-            # TODO: refactor self.tile to take Point
-            target = pos + point
-            tile = self.tile(target.x, target.y)
-            if tile.label != TileType.WALL:
-                logger.debug(f"label={tile.label}")
-                return False
+        for x in xs:
+            for y in ys:
+                tile = self.tile(pos.x + x, pos.y + y)
+                if tile.label != TileType.WALL:
+                    return False
         return True
 
     def carve(self, pos: Point, region: int, label: TileType = None):
@@ -345,26 +340,26 @@ class DungeonGenerator:
         self.corridors.append(start_point)
         # add point to open cell list
         cells.append(start_point)
-        logger.debug(f"first start_point added to cells: {cells}")
+        # logger.debug(f"first start_point added to cells: {cells}")
         attempts = 0
         while cells:
             start_point = cells[-1]
             possible_moves = self.possible_moves(start_point)
             if possible_moves:
-                logger.debug(f"possible_moves is {len(possible_moves)} long")
+                # logger.debug(f"possible_moves is {len(possible_moves)} long")
                 point = choice(possible_moves)
-                logger.debug(f"chosen point is {point}")
+                # logger.debug(f"chosen point is {point}")
                 self.carve(pos=point, region=self.current_region, label=TileType.CORRIDOR)
                 self.corridors.append(point)
                 cells.append(point)
             else:
                 cells.remove(start_point)
-            logger.debug(f"cells is {len(cells)} long")
-            logger.debug(f"{cells}")
-            attempts += 1
-            if attempts > 15:
-                logger.add("debug.log")
-                break
+            # logger.debug(f"cells is {len(cells)} long")
+            # logger.debug(f"{cells}")
+            # attempts += 1
+            # if attempts > 15:
+            #     logger.add("debug.log")
+            #     break
 
     def possible_moves(self, pos: Point) -> List[Point]:
         """
@@ -378,19 +373,19 @@ class DungeonGenerator:
         logger.debug(f"inside possible_moves {pos}")
         available_squares = []
         for direction in Direction.cardinal():
-            logger.debug(f"direction = {direction}")
+            # logger.debug(f"direction = {direction}")
             neighbor = pos + direction
-            logger.debug(f"neighbor = {neighbor}")
+            # logger.debug(f"neighbor = {neighbor}")
             if neighbor.x < 1 or neighbor.y < 1 or neighbor.x > self.width - 2 or neighbor.y > self.height - 2:
-                logger.debug(f"{neighbor} not in bounds")
+                # logger.debug(f"{neighbor} not in bounds")
                 continue
             if self.can_carve(pos, direction):
-                logger.debug(f"can_carve returned True pos={pos}, direction={direction}")
+                # logger.debug(f"can_carve returned True pos={pos}, direction={direction}")
                 available_squares.append(neighbor)
-        logger.debug(f"available squares:")
-        for square in available_squares:
-            logger.debug(f"square={square}")
-        logger.add("debug.log")
+        # logger.debug(f"available squares:")
+        # for square in available_squares:
+            # logger.debug(f"square={square}")
+        # logger.add("debug.log")
         return available_squares
 
     @property
