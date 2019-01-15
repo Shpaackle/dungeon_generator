@@ -1,8 +1,9 @@
-from collections import OrderedDict
-from typing import List
-
 import numpy as np
-from random import randrange, randint
+
+from collections import OrderedDict
+from loguru import logger
+from random import randrange, randint, choice
+from typing import List
 
 from dungeon import Dungeon
 from enums import Direction, TileType
@@ -64,17 +65,18 @@ class Room:
 
 class DungeonGenerator:
     def __init__(self, map_settings: dict):
-        self.height = abs(map_settings["map_height"])
-        self.width = abs(map_settings["map_width"])
-        self.dungeon = Dungeon(self.height, self.width)
+        # self.height = abs(map_settings["map_height"])
+        # self.width = abs(map_settings["map_width"])
+        self.dungeon = Dungeon(map_settings["map_height"], map_settings["map_width"])
 
         self.current_region: int = -1
 
         self.rooms = []
+        self.corridors = []
         self.regions = OrderedDict({"count": 0})
 
         self.map_settings = OrderedDict(map_settings)
-        self.winding_percent = 40
+        self.winding_percent = 20
 
     def __iter__(self):
         # for j in range(self.height):
@@ -105,10 +107,11 @@ class DungeonGenerator:
         """
 
     def initialize_map(self):
-        for y in range(self.dungeon.rows):
-            for x in range(self.dungeon.columns):
+        for y in self.dungeon.rows:
+            for x in self.dungeon.columns:
                 self.dungeon.set_tile(Point(x, y), TileType.WALL)
 
+    # TODO: refactor self.tile to take Point
     def tile(self, x: int, y: int) -> Tile:
         """
 
@@ -122,9 +125,7 @@ class DungeonGenerator:
         tile = self.dungeon.tile(Point(x, y))
         return tile
 
-    def regenerate_map(self):
-        print(f"regenerate map {self.height}")
-
+    # TODO: replace start_x and start_y with Point variable
     def place_room(
         self,
         start_x: int,
@@ -184,9 +185,8 @@ class DungeonGenerator:
                 break
             room_width = randrange(min_room_size, max_room_size, room_step)
             room_height = randrange(min_room_size, max_room_size, room_step)
-            start_x = randint(0, self.width)
-            start_y = randint(0, self.height)
-            self.place_room(start_x, start_y, room_width, room_height, margin)
+            start_point = self.random_point()
+            self.place_room(start_point.x, start_point.y, room_width, room_height, margin)
 
     def room_fits(self, room: Room, margin: int) -> bool:
         """
@@ -244,10 +244,10 @@ class DungeonGenerator:
             open_tiles = []
             for d in Direction.cardinal():
                 if self.can_carve(tile, d):
-                    print("True")
+                    # print("True")
                     open_tiles.append(d)
-                else:
-                    print("False")
+                # else:
+                    # print("False")
 
             if len(open_tiles) > 0:
 
@@ -272,59 +272,59 @@ class DungeonGenerator:
     def find_neighbors(self, point: Point, neighbors: Direction = None):
         """
 
+        used by find_direct_neighbors
         :param point:
         :type point: Point
-        :param neighbors:
+        :param neighbors: direction for neighbors to check, defaults to None
         :type neighbors: Direction
+        :return yields new point in direction(s) chosen
         """
         if neighbors is None:
             neighbors = Direction.every()
         for direction in neighbors:
             new_point = point + direction
-            if (
-                new_point.x < 0
-                or new_point.y < 0
-                or new_point.x >= self.width
-                or new_point.y >= self.height
-            ):
+            if not self.dungeon.in_bounds(new_point):
                 continue
             yield new_point
 
-    def find_neighbors_direct(self, point: Point):
+    def find_direct_neighbors(self, point: Point):
+        """
+        used by possible_moves
+        :param point:
+        :type point:
+        :return:
+        :rtype:
+        """
         return self.find_neighbors(point, neighbors=Direction.cardinal())
 
     def clear_map(self):
-        # self.grid = [
-        #     [Tile.empty(Point(x, y)) for y in range(self.height)]
-        #     for x in range(self.width)
-        # ]
-
+        """
+        Clears map by setting rooms to an empty list and calling dungeon.clear_dungeon()
+        """
         self.rooms = []
 
         self.dungeon.clear_dungeon()
 
-    def can_carve(self, tile: Point, direction: Point) -> bool:
-        # if not (0 <= tile.x + direction.x * 3 < self.width and 0 <= tile.y + direction.y * 3 < self.height):
-        #     return False
-        three_tiles = tile + direction * 3
-        two_tiles = tile + direction * 2
+    def can_carve(self, pos: Point, direction: Point) -> bool:
+        directions = set()
 
-        print(f"tile = {tile}, 2 tiles = {two_tiles}, 3 tiles = {three_tiles}")
-
-        if (
-            tile.x + direction.x * 3 >= self.width
-            or tile.x + direction.x * 3 < 0
-            or tile.y + direction.y * 3 >= self.height
-            or tile.y + direction.y * 3 < 0
-        ):
-            print(f"{three_tiles} out of bounds")
+        if pos is None:
+            logger.error("pos in can_carve() sent as None")
             return False
 
-        print(f"{self.tile(two_tiles.x, two_tiles.y)}")
-        return (
-            self.tile(tile.x + direction.x * 2, tile.y + direction.y * 2).label
-            == TileType.WALL
-        )
+        if direction.x == 0:
+            directions.add([])
+
+        logger.debug(f"directions={directions}")
+
+        for point in directions:
+            # TODO: refactor self.tile to take Point
+            target = pos + point
+            tile = self.tile(target.x, target.y)
+            if tile.label != TileType.WALL:
+                logger.debug(f"label={tile.label}")
+                return False
+        return True
 
     def carve(self, pos: Point, region: int, label: TileType = None):
         if label is None:
@@ -332,3 +332,74 @@ class DungeonGenerator:
 
         self.dungeon.set_tile(pos, label)
         self.dungeon.set_region(pos, region)
+
+    def build_corridors(self, start_point: Point = None):
+        cells = []
+        if start_point is None:
+            start_point = self.random_point()
+            # TODO: refactor can_carve
+            while not self.can_carve(start_point, Direction.self()):
+                start_point = self.random_point()
+        self.carve(pos=start_point, region=self.new_region(), label=TileType.CORRIDOR)
+        # add point to corridor list
+        self.corridors.append(start_point)
+        # add point to open cell list
+        cells.append(start_point)
+        logger.debug(f"first start_point added to cells: {cells}")
+        attempts = 0
+        while cells:
+            start_point = cells[-1]
+            possible_moves = self.possible_moves(start_point)
+            if possible_moves:
+                logger.debug(f"possible_moves is {len(possible_moves)} long")
+                point = choice(possible_moves)
+                logger.debug(f"chosen point is {point}")
+                self.carve(pos=point, region=self.current_region, label=TileType.CORRIDOR)
+                self.corridors.append(point)
+                cells.append(point)
+            else:
+                cells.remove(start_point)
+            logger.debug(f"cells is {len(cells)} long")
+            logger.debug(f"{cells}")
+            attempts += 1
+            if attempts > 15:
+                logger.add("debug.log")
+                break
+
+    def possible_moves(self, pos: Point) -> List[Point]:
+        """
+        searches for directions that a corridor can expand
+        used by build_corridors()
+        :param pos: index of tile in grid to find possible moves
+        :type pos: Point
+        :return: list of potential points the path could move
+        :rtype: List[Point]
+        """
+        logger.debug(f"inside possible_moves {pos}")
+        available_squares = []
+        for direction in Direction.cardinal():
+            logger.debug(f"direction = {direction}")
+            neighbor = pos + direction
+            logger.debug(f"neighbor = {neighbor}")
+            if neighbor.x < 1 or neighbor.y < 1 or neighbor.x > self.width - 2 or neighbor.y > self.height - 2:
+                logger.debug(f"{neighbor} not in bounds")
+                continue
+            if self.can_carve(pos, direction):
+                logger.debug(f"can_carve returned True pos={pos}, direction={direction}")
+                available_squares.append(neighbor)
+        logger.debug(f"available squares:")
+        for square in available_squares:
+            logger.debug(f"square={square}")
+        logger.add("debug.log")
+        return available_squares
+
+    @property
+    def width(self):
+        return self.map_settings["map_width"]
+
+    @property
+    def height(self):
+        return self.map_settings["map_height"]
+
+    def random_point(self) -> Point:
+        return Point(x=randint(0, self.dungeon.width), y=randint(0, self.dungeon.height))

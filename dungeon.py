@@ -17,22 +17,25 @@ class Dungeon:
 
     @property
     def rows(self):
-        return self.height
+        return range(self.height)
 
     @property
     def columns(self):
-        return self.width
+        return range(self.width)
 
     def __iter__(self):
-        for j in range(self.rows):
-            for i in range(self.columns):
-                yield Point(i, j), self.tile_grid[j, i]
+        for row in self.rows:
+            for col in self.columns:
+                yield Point(col, row), self.tile_grid[row, col]
 
     def clear_dungeon(self):
+        """
+        Clears the dungeon data by filling the tile grid with empty tiles and region grid with -1
+        """
         self.tile_grid = numpy.full(shape=self.grid_shape, fill_value=Tile.empty())
         self.region_grid = numpy.full(shape=self.grid_shape, fill_value=-1, dtype=int)
 
-    def tile(self, point: Point,) -> Tile:
+    def tile(self, point: Point) -> Tile:
         return self.tile_grid[point.y, point.x]
 
     def set_tile(self, point: Point, label: TileType):
@@ -41,5 +44,20 @@ class Dungeon:
     def region(self, point: Point) -> int:
         return self.region_grid[point.y, point.x]
 
-    def set_region(self, point: Point, region: int) -> None:
+    def set_region(self, point: Point, region: int):
         self.region_grid[point.y, point.x] = region
+
+    def in_bounds(self, pos: Point) -> bool:
+        """
+        Checks if position is within the boundaries of the dungeon
+        :param pos: position to check
+        :type pos: Point
+        :return: True is pos is within boundaries of the dungeon
+        :rtype: bool
+        """
+        return (
+                pos.x >= 0
+                or pos.x < self.width
+                or pos.y >= 0
+                or pos.y < self.height
+        )

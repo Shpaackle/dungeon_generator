@@ -42,6 +42,3 @@ class Point:
     def __iter__(self):
         yield self.x
         yield self.y
-
-    def in_grid(self):
-        return self.y, self.x

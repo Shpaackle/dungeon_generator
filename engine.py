@@ -216,8 +216,10 @@ class DungeonMap(ScrollView):
         }
         self.generator = DungeonGenerator(map_settings)
         self.generator.initialize_map()
-        self.generator.place_room(2, 2, 3, 5, 1)
-        self.generator.place_room(45, 40, 9, 4, 1, True)
+        self.generator.place_random_rooms(
+            min_room_size=map_settings["min_room_size"],
+            max_room_size=map_settings["max_room_size"],
+        )
 
         self.map_settings = map_settings
         self.display_dungeon()
@@ -232,25 +234,23 @@ class DungeonMap(ScrollView):
         self.display_dungeon()
 
     def build_corridors(self):
-        for y in range(1, self.generator.height, 2):
-            for x in range(1, self.generator.width, 2):
-                tile = self.generator.tile(x, y)
-                if tile.label is not TileType.WALL:
-                    r, g, b, a = tile.label()
-                    with self.children[0].canvas:
-                        Color(r, g, b, a)
-                        Rectangle(
-                            pos=(tile.x * self.tile_size - 1, tile.y * self.tile_size - 1),
-                            size=(self.tile_size - 1, self.tile_size - 1),
-                        )
-                    # self.children[0].canvas.ask_update()
-                    # time.sleep(1)
-                    continue
-                self.generator.grow_maze(Point(x, y))
-
-
+        # for y in range(1, self.generator.height, 2):
+        #     for x in range(1, self.generator.width, 2):
+        #         tile = self.generator.tile(x, y)
+        #         if tile.label is not TileType.WALL:
+        #             r, g, b, a = tile.label()
+        #             with self.children[0].canvas:
+        #                 Color(r, g, b, a)
+        #                 Rectangle(
+        #                     pos=(tile.x * self.tile_size - 1, tile.y * self.tile_size - 1),
+        #                     size=(self.tile_size - 1, self.tile_size - 1),
+        #                 )
+        #             # self.children[0].canvas.ask_update()
+        #             # time.sleep(1)
+        #             continue
+        #         self.generator.grow_maze(Point(x, y))
+        self.generator.build_corridors()
         self.display_dungeon()
-
 
 
 class DungeonGeneratorApp(App):

@@ -21,7 +21,7 @@ class Direction(CallableEnum):
     @classmethod
     def cardinal(cls):
         """
-        Gets neighbors in the cardinal directions
+        Yields Point for the cardinal directions (N, E, S, W)
         :return: generator object of Point for each cardinal directions
         """
         for direction in [cls.N, cls.E, cls.S, cls.W]:
@@ -29,9 +29,12 @@ class Direction(CallableEnum):
 
     @classmethod
     def every(cls):
-        every = [n for n in cls]
         for direction in cls:
             yield direction.value
+
+    @staticmethod
+    def self():
+        return Point(0, 0)
 
 
 class TileType(CallableEnum):
