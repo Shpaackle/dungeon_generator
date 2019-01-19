@@ -1,5 +1,7 @@
 import numpy
 
+from loguru import logger
+
 from enums import TileType
 from point import Point
 from tile import Tile
@@ -36,9 +38,14 @@ class Dungeon:
         self.region_grid = numpy.full(shape=self.grid_shape, fill_value=-1, dtype=int)
 
     def tile(self, point: Point) -> Tile:
+        tile = Tile.empty()
         if not self.in_bounds(point):
-            return Tile.empty(point)
-        return self.tile_grid[point.y, point.x]
+            tile = Tile.empty(point)
+        try:
+            tile = self.tile_grid[point.y, point.x]
+        except IndexError:
+            print("index out of range")
+        return tile
 
     def set_tile(self, point: Point, label: TileType):
         self.tile_grid[point.y, point.x] = Tile.from_label(point, label)
@@ -57,9 +64,4 @@ class Dungeon:
         :return: True is pos is within boundaries of the dungeon
         :rtype: bool
         """
-        return (
-                pos.x >= 0
-                or pos.x < self.width
-                or pos.y >= 0
-                or pos.y < self.height
-        )
+        return 0 <= pos.x < self.width and 0 <= pos.y < self.height

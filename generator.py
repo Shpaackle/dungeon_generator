@@ -186,7 +186,9 @@ class DungeonGenerator:
             room_width = randrange(min_room_size, max_room_size, room_step)
             room_height = randrange(min_room_size, max_room_size, room_step)
             start_point = self.random_point()
-            self.place_room(start_point.x, start_point.y, room_width, room_height, margin)
+            self.place_room(
+                start_point.x, start_point.y, room_width, room_height, margin
+            )
 
     def room_fits(self, room: Room, margin: int) -> bool:
         """
@@ -247,11 +249,10 @@ class DungeonGenerator:
                     # print("True")
                     open_tiles.append(d)
                 # else:
-                    # print("False")
+                # print("False")
 
             if len(open_tiles) > 0:
 
-                current_direction = None
                 if (
                     last_direction in open_tiles
                     and randint(1, 101) > self.winding_percent
@@ -331,10 +332,20 @@ class DungeonGenerator:
     def build_corridors(self, start_point: Point = None):
         cells = []
         if start_point is None:
-            start_point = self.random_point()
+            start_point = Point(
+                x=randint(1, self.width - 2), y=randint(1, self.height - 2)
+            )
             # TODO: refactor can_carve
-            while not self.can_carve(start_point, Direction.self()):
-                start_point = self.random_point()
+        attempts = 0
+        while not self.can_carve(start_point, Direction.self()):
+            attempts += 1
+            start_point = Point(
+                x=randint(1, self.width - 2), y=randint(1, self.height - 2)
+            )
+            # TODO: need to remove this hard stop once everything is combined
+            if attempts > 100:
+                break
+
         self.carve(pos=start_point, region=self.new_region(), label=TileType.CORRIDOR)
         # add point to corridor list
         self.corridors.append(start_point)
@@ -349,7 +360,9 @@ class DungeonGenerator:
                 # logger.debug(f"possible_moves is {len(possible_moves)} long")
                 point = choice(possible_moves)
                 # logger.debug(f"chosen point is {point}")
-                self.carve(pos=point, region=self.current_region, label=TileType.CORRIDOR)
+                self.carve(
+                    pos=point, region=self.current_region, label=TileType.CORRIDOR
+                )
                 self.corridors.append(point)
                 cells.append(point)
             else:
@@ -370,13 +383,13 @@ class DungeonGenerator:
         :return: list of potential points the path could move
         :rtype: List[Point]
         """
-        logger.debug(f"inside possible_moves {pos}")
+        # logger.debug(f"inside possible_moves {pos}")
         available_squares = []
         for direction in Direction.cardinal():
             # logger.debug(f"direction = {direction}")
             neighbor = pos + direction
             # logger.debug(f"neighbor = {neighbor}")
-            if neighbor.x < 1 or neighbor.y < 1 or neighbor.x > self.width - 2 or neighbor.y > self.height - 2:
+            if not self.dungeon.in_bounds(neighbor):
                 # logger.debug(f"{neighbor} not in bounds")
                 continue
             if self.can_carve(pos, direction):
@@ -384,7 +397,7 @@ class DungeonGenerator:
                 available_squares.append(neighbor)
         # logger.debug(f"available squares:")
         # for square in available_squares:
-            # logger.debug(f"square={square}")
+        # logger.debug(f"square={square}")
         # logger.add("debug.log")
         return available_squares
 
@@ -397,4 +410,6 @@ class DungeonGenerator:
         return self.map_settings["map_height"]
 
     def random_point(self) -> Point:
-        return Point(x=randint(0, self.dungeon.width), y=randint(0, self.dungeon.height))
+        return Point(
+            x=randint(0, self.dungeon.width), y=randint(0, self.dungeon.height)
+        )
